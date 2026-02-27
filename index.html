@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1CQ4D3VQ3L"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-1CQ4D3VQ3L');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Maker Plaques | 3D Signage Studio & STL Generator</title>
+    <meta name="description" content="Generate custom 3D printed plaques with SVG logos, QR codes, and text. Real-time 3D preview, production-ready STL and 3MF exports.">
+    <meta name="keywords" content="3D Printing, STL Export, 3MF Export, Signage Generator, Three.js, CAD Tool, Maker Tool, Custom Plaque, Industrial Design, Compliance Signage, Chris Pirillo Arcade">
+    <meta name="author" content="Chris Pirillo (@ChrisPirillo)">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#0f172a">
+
+    <link rel="canonical" href="https://arcade.pirillo.com/maker-plaques.html">
+    <meta property="og:title" content="Maker Plaques | 3D Signage Studio & STL Generator">
+    <meta property="og:description" content="Design and export custom 3D plaques with SVG support, QR codes, and production-ready STL/3MF files.">
+    <meta property="og:image" content="https://arcade.pirillo.com/images/maker-plaques.png">
+    <meta property="og:url" content="https://arcade.pirillo.com/maker-plaques.html">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ChrisPirillo">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Maker Plaques",
+      "url": "https://arcade.pirillo.com/maker-plaques.html",
+      "description": "Custom 3D signage studio for generating compliant plaques with SVG logos, QR codes, and text.",
+      "applicationCategory": "DesignApplication",
+      "operatingSystem": "Web",
+      "author": {
+        "@type": "Person",
+        "name": "Chris Pirillo"
+      }
+    }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/SVGLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/TTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    
+    <style>
+        :root { --accent: #4facfe; --glass-bg: rgba(10, 15, 28, 0.9); --glass-border: rgba(255, 255, 255, 0.08); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; margin: 0; overflow: hidden; color: #f8fafc; user-select: none; }
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(24px); border: 1px solid var(--glass-border); border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); }
+        .input-style { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 14px; border-radius: 12px; color: white; font-size: 0.85rem; width: 100%; transition: all 0.2s ease; }
+        .input-style:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.07); outline: none; }
+        .label-style { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: #4facfe; display: block; line-height: 1; }
+        .val-style { font-size: 0.65rem; font-weight: 800; color: #4facfe; opacity: 0.7; line-height: 1; }
+        .btn-primary { background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #020617; font-weight: 800; padding: 14px; border-radius: 14px; text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.2); }
+        .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; font-weight: 700; padding: 10px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s; font-size: 0.7rem; }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--accent); }
+        #drop-zone.dragover { border-color: #4facfe; background: rgba(79, 172, 254, 0.1); }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        .hidden-node { display: none !important; }
+        input[type="range"] { accent-color: var(--accent); }
+        .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; padding: 1.5rem; }
+        .modal-overlay.active { display: flex; }
+        .toggle-btn { position: relative; width: 36px; height: 20px; background: #334155; border-radius: 20px; cursor: pointer; transition: all 0.3s; }
+        .toggle-btn.active { background: #4facfe; }
+        .toggle-btn::after { content: ''; position: absolute; left: 2px; top: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: all 0.3s; }
+        .toggle-btn.active::after { left: 18px; }
+    </style>
+</head>
+<body>
+
+<div id="loading-overlay" class="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center z-50">
+    <div class="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+</div>
+
+<div id="info-modal" class="modal-overlay" role="dialog" aria-labelledby="modal-title">
+    <div class="w-full max-w-lg glass-panel p-8 relative">
+        <button id="close-modal" class="absolute top-6 right-6 text-white text-opacity-40 hover:text-white" aria-label="Close modal">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+        <h2 id="modal-title" class="text-2xl font-bold mb-4 text-blue-400">Maker Plaques Guide</h2>
+        <div class="text-sm text-white text-opacity-70 space-y-4 mb-8">
+            <p>Welcome to MakerDeck's 3D Signage Generator - for those selling prints designed by other artists. Create precision compliance-grade plaques quickly.</p>
+            <ul class="list-disc ml-5 space-y-2">
+                <li>Adjust text, shapes, and dimensions in real-time.</li>
+                <li><strong>NEW:</strong> Generate QR codes directly on your plaque for links or social media.</li>
+                <li>Set an <strong>Export Width</strong> as a final adjustment to scale your design.</li>
+                <li>Export as a single STL or a multi-object 3MF including the custom-fit stand.</li>
+                <li>Save and Load design files (.json) for iterative work.</li>
+            </ul>
+        </div>
+        <nav class="grid grid-cols-2 gap-3">
+            <a href="https://arcade.pirillo.com/" target="_blank" class="btn-secondary">More of My Apps</a>
+            <a href="https://chris.pirillo.com/" target="_blank" class="btn-secondary">Follow Chris Pirillo</a>
+            <a href="https://ctrlaltcreate.live/" target="_blank" class="btn-secondary">Learn How to Make Apps</a>
+            <a href="https://www.paypal.com/donate/?hosted_button_id=UMWCDWGVXVHZU" target="_blank" class="btn-secondary">Donate to Me Here</a>
+            <a href="https://patreon.com/ChrisPirillo" target="_blank" class="btn-secondary col-span-2">Support My Patreon</a>
+        </nav>
+    </div>
+</div>
+
+<main>
+<aside id="main-menu" class="fixed top-0 left-0 w-full h-[50vh] -translate-y-full transition-transform duration-300 md:translate-y-0 md:left-6 md:top-6 md:bottom-6 md:w-80 md:h-auto md:rounded-2xl rounded-none rounded-b-2xl glass-panel flex flex-col z-40">
+    <header class="p-6 border-b border-white border-opacity-5 flex items-center justify-between">
+        <h1 class="text-xl font-extrabold tracking-tight text-white">MAKER PLAQUES</h1>
+        <button id="open-info" class="text-blue-400 hover:text-white transition-colors" title="Open Information Guide">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </button>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-6 space-y-6 scroll-hide">
+        <section class="space-y-3">
+            <div><label for="text1" class="label-style mb-2">Line 1</label><input type="text" id="text1" class="input-style" value="Printed by Rabchilla"></div>
+            <div><label for="text2" class="label-style mb-2">Line 2</label><input type="text" id="text2" class="input-style" value="Designed by Chris Pirillo"></div>
+        </section>
+
+        <section>
+            <label for="font-select" class="label-style mb-2">Typography</label>
+            <select id="font-select" class="input-style">
+                <optgroup label="Standard Geometry">
+                    <option value="helvetiker_bold">Helvetiker Bold</option>
+                    <option value="helvetiker">Helvetiker Regular</option>
+                    <option value="optimer_bold">Optimer Bold</option>
+                    <option value="gentilis_bold">Gentilis Bold</option>
+                </optgroup>
+                <optgroup label="Modern Sans (Droid)">
+                    <option value="droid_sans_bold">Droid Sans Bold</option>
+                    <option value="droid_sans_regular">Droid Sans Regular</option>
+                    <option value="droid_serif_bold">Droid Serif Bold</option>
+                    <option value="droid_serif_regular">Droid Serif Regular</option>
+                </optgroup>
+                <optgroup label="High Contrast (TTF)">
+                    <option value="alfa_slab_one">Alfa Slab One</option>
+                    <option value="black_ops_one">Black Ops One</option>
+                    <option value="paytone_one">Paytone One</option>
+                    <option value="passion_one">Passion One</option>
+                    <option value="archivo_black">Archivo Black</option>
+                    <option value="anton_regular">Anton Ultra</option>
+                    <option value="ubuntu_bold">Ubuntu Bold</option>
+                    <option value="bebas_neue_regular">Bebas Neue</option>
+                    <option value="lato_black">Lato Black</option>
+                    <option value="kanit_black">Kanit Black</option>
+                    <option value="poppins_black">Poppins Black</option>
+                    <option value="titillium_web_bold">Titillium Bold</option>
+                </optgroup>
+                <optgroup label="Print-Optimized Serif">
+                    <option value="arvo_bold">Arvo Bold (Industrial)</option>
+                    <option value="zilla_slab_bold">Zilla Slab Bold (Chunky)</option>
+                    <option value="bree_serif">Bree Serif (Slabby)</option>
+                </optgroup>
+            </select>
+        </section>
+
+        <section>
+            <label for="shape-select" class="label-style mb-2">Architecture</label>
+            <select id="shape-select" class="input-style">
+                <option value="rect">Industrial Rect</option>
+                <option value="round" selected>Modern Rounded</option>
+                <option value="pill">Streamline Pill</option>
+                <option value="chamf">Chamfered Tech</option>
+                <option value="oval">Classic Oval</option>
+                <option value="hex">Hexagon Frame</option>
+                <option value="oct">Octagon Badge</option>
+                <option value="trap">Trapezoid Slab</option>
+                <option value="shld">Guardians Shield</option>
+                <option value="badge">Police Badge</option>
+                <option value="banner">Flag Banner</option>
+                <option value="cyber">Cyberpunk Slant</option>
+                <option value="gate">Hangar Gate</option>
+                <option value="chevr">Chevron Arrow</option>
+                <option value="gothic">Gothic Curve</option>
+                <option value="wedge">Aggressor Wedge</option>
+            </select>
+        </section>
+
+        <section id="qr-section" class="space-y-4 pt-2 border-t border-white border-opacity-5">
+            <div class="flex items-center justify-between">
+                <label class="label-style">Generate QR Code</label>
+                <div id="qr-toggle" class="toggle-btn"></div>
+            </div>
+            <div id="qr-controls" class="hidden-node space-y-4">
+                <div>
+                    <label for="qr-text" class="label-style mb-2">QR Target (URL/Text)</label>
+                    <input type="text" id="qr-text" class="input-style" value="https://ctrlaltcreate.live">
+                </div>
+            </div>
+        </section>
+
+        <div id="logo-controls" class="hidden-node space-y-4">
+            <div>
+                <label for="logo-pos" class="label-style mb-2">Assets Placement</label>
+                <select id="logo-pos" class="input-style">
+                    <option value="top">Top Header</option>
+                    <option value="middle">Between Text Lines</option>
+                    <option value="bottom">Bottom Footer</option>
+                    <option value="left">Left Side</option>
+                    <option value="right" selected>Right Side</option>
+                </select>
+            </div>
+            <div>
+                <div class="flex justify-between items-start mb-2">
+                    <label for="logo-scale" class="label-style">Asset Scale (Logo/QR)</label>
+                    <span id="logo-scale-val" class="val-style">1.0x</span>
+                </div>
+                <input type="range" id="logo-scale" min="0.5" max="3.0" step="0.1" value="1.0" class="w-full h-1">
+            </div>
+        </div>
+
+        <section>
+            <div class="flex items-center gap-2 mb-2">
+                <label class="label-style mb-0">Upload SVG Logo</label>
+                <a href="https://arcade.pirillo.com/svg-vectorify.html" target="_blank" rel="noopener" class="text-blue-400 hover:text-white transition-colors" title="Convert an image to SVG">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </a>
+            </div>
+            <div class="border-2 border-dashed border-white border-opacity-10 hover:border-blue-500 rounded-xl p-4 text-center cursor-pointer transition-all" id="drop-zone" aria-label="Drop zone for SVG files">
+                <span class="text-[9px] font-bold text-white text-opacity-30 uppercase tracking-widest block" id="file-name">Drop SVG</span>
+                <input type="file" id="svg-upload" accept=".svg" class="hidden">
+            </div>
+        </section>
+
+        <section class="space-y-4">
+            <div><div class="flex justify-between items-start mb-2"><label for="text-size" class="label-style">Text Size (Ratio)</label><span id="text-size-val" class="val-style">8</span></div>
+                <input type="range" id="text-size" min="5" max="25" value="8" class="w-full h-1"></div>
+            <div><div class="flex justify-between items-start mb-2"><label for="line-spacing" class="label-style">Spacing (Ratio)</label><span id="line-spacing-val" class="val-style">8</span></div>
+                <input type="range" id="line-spacing" min="4" max="40" value="8" class="w-full h-1"></div>
+            <div><div class="flex justify-between items-start mb-2"><label for="kerning" class="label-style">Font Kerning</label><span id="kerning-val" class="val-style">0</span></div>
+                <input type="range" id="kerning" min="1" max="2" step="0.2" value="0" class="w-full h-1"></div>
+            <div><div class="flex justify-between items-start mb-2"><label for="padding" class="label-style">Padding (Ratio)</label><span id="padding-val" class="val-style">20</span></div>
+                <input type="range" id="padding" min="7" max="60" value="20" class="w-full h-1"></div>
+            <div><div class="flex justify-between items-start mb-2"><label for="thickness" class="label-style">Sign Thickness</label><span id="thickness-val" class="val-style">5mm</span></div>
+                <input type="range" id="thickness" min="2" max="8" value="5" class="w-full h-1"></div>
+            <div><div class="flex justify-between items-start mb-2"><label for="content-relief" class="label-style">Content Relief</label><span id="content-relief-val" class="val-style">2.0mm</span></div>
+                <input type="range" id="content-relief" min="1" max="5" step="0.1" value="2" class="w-full h-1"></div>
+        </section>
+
+        <div class="grid grid-cols-2 gap-2 pt-2">
+            <button id="save-config-btn" class="btn-secondary">SAVE DESIGN</button>
+            <button id="load-config-btn" class="btn-secondary">LOAD DESIGN</button>
+            <input type="file" id="config-upload" accept=".json" class="hidden">
+        </div>
+    </div>
+
+    <footer class="p-6 border-t border-white border-opacity-5 space-y-4">
+        <div>
+            <div class="flex justify-between items-start mb-2">
+                <label for="target-width" class="label-style">Export Width</label>
+                <span id="target-width-val" class="val-style">175mm</span>
+            </div>
+            <input type="range" id="target-width" min="175" max="320" value="175" class="w-full h-1">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+            <button id="export-btn" class="btn-primary text-[10px] leading-tight px-1 py-3">Export STL</button>
+            <button id="export-3mf-btn" class="btn-primary text-[10px] leading-tight px-1 py-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)">Export 3MF</button>
+        </div>
+    </footer>
+</aside>
+</main>
+
+<button id="mobile-menu-toggle" class="fixed bottom-6 left-6 z-50 md:hidden glass-panel border border-white border-opacity-10 p-3 rounded-full text-white hover:text-blue-400 transition-colors shadow-2xl">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+</button>
+
+<a href="https://twitch.tv/MakerDeck" target="_blank" rel="noopener" class="fixed bottom-6 right-6 px-4 py-3 flex items-center justify-center gap-3 rounded-2xl border border-white border-opacity-10 hover:border-white transition-all group z-20 shadow-2xl" style="background: #9146FF;">
+    <div class="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+    <span class="text-[10px] font-extrabold uppercase tracking-widest text-white">MakerDeck Live</span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-white" aria-hidden="true"><path d="M11.571 4.714h1.715v5.143H11.57V4.714zm4.715 0h1.714v5.143h-1.714V4.714zM7.286 0L4.714 2.571v15.429h5.143v3.429l3.429-3.429H17.14L24 11.143V0H7.286zm14.571 10.286l-3.428 3.428h-3.429l-3 3v-3H8.143V2.571h13.714v7.715z"></path></svg>
+</a>
+
+<div id="canvas-container" class="w-full h-screen"></div>
+
+<script type="module">
+    let scene, camera, renderer, controls, plaqueGroup, grid;
+    let currentFont, svgShapes = null, qrShapes = null;
+    let currentTotalW = 0, currentTotalH = 0;
+
+    const BACK_SVG_PATH = "M25.45 54.25L25.55 60.65Q24.65 60.80 23.65 60.90Q22.65 61 21.35 61Q15.20 61 11.08 59.90Q6.95 58.80 4.53 56.42Q2.10 54.05 1.05 50.23Q0 46.40 0 40.95Q0 35.10 1.08 30.97Q2.15 26.85 4.70 24.32Q7.25 21.80 11.63 20.63Q16 19.45 22.60 19.45Q29.55 19.45 34.02 20.63Q38.50 21.80 41 24.32Q43.50 26.85 44.50 30.97Q45.50 35.10 45.50 40.95Q45.50 45.40 45.18 48.38Q44.85 51.35 43.90 53.10Q42.95 54.85 41.08 55.60Q39.20 56.35 36.05 56.35Q31.90 56.35 29.77 55.10Q27.65 53.85 27.10 50.75L26.90 49.65L26.80 49.65Q25.90 50.80 24.13 51.48Q22.35 52.15 19.60 52.15Q11.90 52.15 11.90 44.60Q11.90 41.40 13.90 39.63Q15.90 37.85 20.25 37.85L26.75 37.85Q26.45 36.10 25.15 35.52Q23.85 34.95 20.80 34.95Q18.80 34.95 17 35.20Q15.20 35.45 13.70 35.85L13.55 35.75L13.55 30.10Q14.90 29.65 17.15 29.32Q19.40 29 21.40 29Q25.50 29 28.05 29.95Q30.60 30.90 31.83 33.50Q33.05 36.10 33.20 41.10Q33.30 44.30 33.35 46.23Q33.40 48.15 33.60 49.13Q33.80 50.10 34.30 50.42Q34.80 50.75 35.85 50.75Q37.25 50.75 37.78 50Q38.30 49.25 38.40 47.15Q38.50 45.05 38.50 41.10Q38.50 36.55 38 33.60Q37.50 30.65 35.93 28.97Q34.35 27.30 31.18 26.63Q28 25.95 22.60 25.95Q17.40 25.95 14.30 26.63Q11.20 27.30 9.63 28.97Q8.05 30.65 7.53 33.55Q7 36.45 7 40.95Q7 45 7.50 47.63Q8 50.25 9.45 51.75Q10.90 53.25 13.78 53.88Q16.65 54.50 21.40 54.50Q22.60 54.50 23.60 54.45Q24.60 54.40 25.40 54.20L25.45 54.25M21.35 46.60Q26.85 46.60 26.90 43.65L26.90 42.60L21.85 42.60Q19.90 42.60 19.15 43.13Q18.40 43.65 18.40 44.60Q18.40 45.75 19.18 46.17Q19.95 46.60 21.35 46.60ZM65.05 50.45Q64.20 47.75 63.33 44.70Q62.45 41.65 61.60 38.65Q60.75 35.65 60.05 33.05Q59.35 30.45 58.85 28.55Q58.35 26.65 58.15 25.85L57.95 25.90Q58.10 26.80 58.20 28.27Q58.30 29.75 58.35 31.38Q58.40 33 58.40 34.35L58.40 52.05L50.75 52.05L50.75 20.40L64.15 20.40Q64.85 23.05 65.63 25.97Q66.40 28.90 67.18 31.77Q67.95 34.65 68.55 37.23Q69.15 39.80 69.40 41.70L69.50 41.70Q69.75 39.80 70.33 37.25Q70.90 34.70 71.65 31.80Q72.40 28.90 73.20 25.97Q74 23.05 74.65 20.40L87.85 20.40L87.85 52.05L80.30 52.05L80.30 34.35Q80.30 33 80.35 31.38Q80.40 29.75 80.53 28.27Q80.65 26.80 80.75 25.90L80.55 25.85Q80.35 26.65 79.85 28.55Q79.35 30.45 78.63 33.08Q77.90 35.70 77.05 38.70Q76.20 41.70 75.33 44.73Q74.45 47.75 73.65 50.45L65.05 50.45ZM103.25 27.45Q108.05 27.45 111 28.45Q113.95 29.45 111 32.13Q116.70 34.80 116.70 39.85L116.70 52.05L109.45 52.05L109.20 49.75L109.05 49.75Q108.10 51 106.10 51.75Q104.10 52.50 100.90 52.50Q92.25 52.50 92.25 44.40Q92.25 40.95 94.53 38.98Q96.80 37 101.70 37L109.10 37Q108.75 34.90 107.30 34.17Q105.85 33.45 102.35 33.45Q100.15 33.45 98.03 33.77Q95.90 34.10 94.30 34.50L94.15 34.40L94.20 28.60Q95.20 28.30 96.75 28.02Q98.30 27.75 100.03 27.60Q101.75 27.45 103.25 27.45M102.95 46.60Q106.05 46.60 107.60 45.83Q109.15 45.05 109.20 43.35L109.20 42.10L103.55 42.10Q101.35 42.10 100.47 42.73Q99.60 43.35 99.60 44.40Q99.60 45.65 100.50 46.13Q101.40 46.60 102.95 46.60ZM129.95 52.05L121.95 52.05L121.95 18.40L129.95 18.40L129.95 38L130.05 38L136.35 27.70L145.15 27.70L145.15 27.90L137.75 39.40L137.75 39.60L146.35 52.05L137.15 52.05L130.10 40.80L129.95 40.75L129.95 52.05ZM170.25 51.25Q168.85 51.75 166.38 52.13Q163.90 52.50 160.50 52.50Q156.20 52.50 153.18 51.38Q150.15 50.25 148.60 47.52Q147.05 44.80 147.05 39.95Q147.05 33.35 150.08 30.40Q153.10 27.45 159.45 27.45Q164 27.45 166.63 28.75Q169.25 30.05 170.38 32.42Q171.50 34.80 171.50 38.05Q171.50 39 171.43 40.10Q171.35 41.20 171.15 42.25L170.95 42.45L154.50 42.45Q154.85 44.65 156.58 45.35Q158.30 46.05 162.20 46.05Q164.80 46.05 166.53 45.92Q168.25 45.80 170.05 45.55L170.25 45.70L170.25 51.25M164.55 37.20Q164.55 36 164.18 35.13Q163.80 34.25 162.70 33.77Q161.60 33.30 159.45 33.30Q156.30 33.30 155.33 34.38Q154.35 34.38 154.35 37.20L164.55 37.20ZM183.75 52.05L175.75 52.05L175.75 27.70L182.25 27.70L182.90 32.70L183.05 32.70Q183.50 29.90 185.20 28.67Q186.90 27.45 190.25 27.45Q191.60 27.45 192.70 27.57Q193.80 27.70 194.55 27.80L194.55 35.60L194.45 35.70Q193.65 35.50 192.63 35.35Q191.60 35.20 190.30 35.20Q188.45 35.20 186.97 35.80Q185.50 36.40 184.68 38.13Q183.85 39.85 183.85 43.25L183.85 43.25L183.75 52.05ZM198.05 52.05L198.05 20.40L211.90 20.40Q216.05 20.40 218.85 21.07Q221.65 21.75 223.35 23.45Q225.05 25.15 225.80 28.17Q226.55 31.20 226.55 35.95Q226.55 40.90 225.80 44.05Q225.05 47.20 223.35 48.95Q221.65 50.70 218.85 51.38Q216.05 52.05L211.90 52.05M210.75 27.15L206.05 27.15L206.05 45.30L210.75 45.30Q213.65 45.30 215.33 44.65Q217 44 217.73 42Q218.45 40 218.45 35.95Q218.45 32.10 217.73 30.22Q217 28.35 215.33 27.75Q213.65 27.15 210.75 27.15ZM253 51.25Q251.60 51.75 249.13 52.13Q246.65 52.50 243.25 52.50Q238.95 52.50 235.93 51.38Q232.90 50.25 231.35 47.52Q229.80 44.80 229.80 39.95Q229.80 33.35 232.83 30.40Q235.85 27.45 242.20 27.45Q246.75 27.45 249.38 28.75Q252 30.05 253.13 32.42Q254.25 34.80 254.25 38.05Q254.25 39 254.18 40.10Q254.10 41.20 253.90 42.25L253.70 42.45L237.25 42.45Q237.60 44.65 239.33 45.35Q241.05 46.05 244.95 46.05Q247.55 46.05 249.28 45.92Q251 45.80 252.80 45.55L253 45.70L253 51.25M247.30 37.20Q247.30 36 246.93 35.13Q246.55 34.25 245.45 33.77Q244.35 33.30 242.20 33.30Q239.05 33.30 238.08 34.38Q237.10 35.45 237.10 37.20L247.30 37.20ZM277.45 45L277.45 51.50Q276.20 52 273.75 52.25Q271.30 52.50 268.55 52.50Q264.60 52.50 261.98 51.40Q259.35 50.30 258.07 47.60Q256.80 44.90 256.75 40.10Q256.75 35.15 258.13 32.40Q259.50 29.65 262.15 28.55Q264.80 27.45 268.50 27.45Q270.70 27.45 273.15 27.75Q275.60 28.05 277.15 28.55L277.20 35.25L277.05 35.35Q275.55 35.05 273.85 34.90Q272.15 34.75 270.50 34.75Q267.15 34.75 265.85 36Q264.55 37.25 264.55 40.20Q264.55 42.45 265.10 43.55Q265.65 44.65 266.95 45Q268.25 45.35 270.50 45.35Q272.25 45.35 273.85 45.20Q275.45 45.05 277.25 44.85L277.45 45ZM289.95 52.05L281.95 52.05L281.95 18.40L289.95 18.40L289.95 38L290.05 38L296.35 27.70L305.15 27.70L305.15 27.90L297.75 39.40L297.75 39.60L306.35 52.05L297.15 52.05L290.10 40.80L289.95 40.75L289.95 52.05Z";
+
+    const PLAQUE_COLOR = 0x22262f;
+    const TEXT_COLOR = 0x60a5fa;
+    const NOTCH_WIDTH = 55;
+    const NOTCH_DEPTH = 7;
+
+    const params = {
+        text1: "Printed by Rabchilla",
+        text2: "Designed by Chris Pirillo",
+        thickness: 5,
+        fontUrl: "helvetiker_bold",
+        shape: 'round',
+        logoPos: 'right',
+        logoScale: 1.0,
+        qrEnabled: false,
+        qrText: "https://ctrlaltcreate.live",
+        textSize: 8,
+        lineSpacing: 8,
+        padding: 20,
+        contentRelief: 2.0,
+        targetWidth: 175,
+        kerning: 0.0,
+        fontWeight: 0.2
+    };
+
+    const ghofl = 'https://cdn.jsdelivr.net/gh/google/fonts@master/ofl/';
+    const ghufl = 'https://cdn.jsdelivr.net/gh/google/fonts@master/ufl/';
+    const t_ex_json = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/';
+
+    const fontPaths = {
+        helvetiker_bold:    { type: 'json', url: t_ex_json + 'helvetiker_bold.typeface.json' },
+        helvetiker:         { type: 'json', url: t_ex_json + 'helvetiker_regular.typeface.json' },
+        optimer_bold:       { type: 'json', url: t_ex_json + 'optimer_bold.typeface.json' },
+        gentilis_bold:      { type: 'json', url: t_ex_json + 'gentilis_bold.typeface.json' },
+        droid_sans_bold:    { type: 'json', url: t_ex_json + 'droid/droid_sans_bold.typeface.json' },
+        droid_sans_regular: { type: 'json', url: t_ex_json + 'droid/droid_sans_regular.typeface.json' },
+        droid_serif_bold:   { type: 'json', url: t_ex_json + 'droid/droid_serif_bold.typeface.json' },
+        droid_serif_regular:{ type: 'json', url: t_ex_json + 'droid/droid_serif_regular.typeface.json' },
+        alfa_slab_one:      { type: 'ttf', url: ghofl    + 'alfaslabone/AlfaSlabOne-Regular.ttf' },
+        black_ops_one:      { type: 'ttf', url: ghofl    + 'blackopsone/BlackOpsOne-Regular.ttf' },
+        paytone_one:        { type: 'ttf', url: ghofl    + 'paytoneone/PaytoneOne-Regular.ttf' },
+        passion_one:        { type: 'ttf', url: ghofl    + 'passionone/PassionOne-Regular.ttf' },
+        archivo_black:      { type: 'ttf', url: ghofl    + 'archivoblack/ArchivoBlack-Regular.ttf' },
+        anton_regular:      { type: 'ttf', url: ghofl    + 'anton/Anton-Regular.ttf' },
+        ubuntu_bold:        { type: 'ttf', url: ghufl    + 'ubuntu/Ubuntu-Bold.ttf' },
+        bebas_neue_regular: { type: 'ttf', url: ghofl    + 'bebasneue/BebasNeue-Regular.ttf' },
+        lato_black:         { type: 'ttf', url: ghofl    + 'lato/Lato-Black.ttf' },
+        kanit_black:        { type: 'ttf', url: ghofl    + 'kanit/Kanit-Black.ttf' },
+        poppins_black:      { type: 'ttf', url: ghofl    + 'poppins/Poppins-Black.ttf' },
+        titillium_web_bold: { type: 'ttf', url: ghofl    + 'titilliumweb/TitilliumWeb-Bold.ttf' },
+        arvo_bold:          { type: 'ttf', url: ghofl    + 'arvo/Arvo-Bold.ttf' },
+        zilla_slab_bold:    { type: 'ttf', url: ghofl    + 'zillaslab/ZillaSlab-Bold.ttf' },
+        bree_serif:         { type: 'ttf', url: ghofl    + 'breeserif/BreeSerif-Regular.ttf' },
+    };
+
+    async function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 5000);
+        camera.position.set(0, -320, 500);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, logarithmicDepthBuffer: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.minDistance = 50;
+        controls.maxDistance = 1500;
+
+        grid = new THREE.GridHelper(2000, 50, 0x4facfe, 0x1e293b);
+        grid.rotation.x = Math.PI / 2;
+        grid.position.z = -1;
+        grid.material.opacity = 0.2;
+        grid.material.transparent = true;
+        scene.add(grid);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(100, -200, 400);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        plaqueGroup = new THREE.Group();
+        scene.add(plaqueGroup);
+
+        await loadFont(params.fontUrl);
+        updatePlaque();
+        document.getElementById('loading-overlay').classList.add('hidden-node');
+        animate();
+    }
+
+    async function loadFont(fontKey) {
+        const entry = fontPaths[fontKey] || fontPaths['helvetiker_bold'];
+        const fontLoader = new THREE.FontLoader();
+        const ttfLoader = new THREE.TTFLoader();
+        
+        return new Promise(async (resolve) => {
+            try {
+                if (entry.type === 'json') {
+                    const response = await fetch(entry.url);
+                    const data = await response.json();
+                    currentFont = fontLoader.parse(data);
+                } else {
+                    currentFont = await new Promise((res, rej) => {
+                        ttfLoader.load(entry.url, (json) => {
+                            try { res(fontLoader.parse(json)); } catch (e) { rej(e); }
+                        }, undefined, (err) => rej(err));
+                    });
+                }
+            } catch (err) {
+                console.warn("Font Load Failed, using fallback", err);
+                const fallbackRes = await fetch(fontPaths.helvetiker_bold.url);
+                currentFont = fontLoader.parse(await fallbackRes.json());
+            }
+            resolve(currentFont);
+        });
+    }
+
+    function createTextGeometry(text, size, embossHeight) {
+        if (!text || !text.trim() || !currentFont) return null;
+        const chars = text.toUpperCase().split('');
+        const geometries = [];
+        let xOffset = 0;
+        const fontData = currentFont.data;
+        if (!fontData) return null;
+
+        const scale = size / fontData.resolution;
+        chars.forEach(char => {
+            const glyph = fontData.glyphs[char] || fontData.glyphs['?'];
+            if (char === ' ') {
+                xOffset += (glyph ? glyph.ha : fontData.resolution * 0.25) * scale + params.kerning;
+                return;
+            }
+            if (!glyph) return;
+            
+            const geo = new THREE.TextGeometry(char, {
+                font: currentFont, size: size, height: embossHeight,
+                curveSegments: 3, bevelEnabled: true, bevelThickness: 0, bevelSize: params.fontWeight, bevelOffset: 0, bevelSegments: 1
+            });
+            geo.applyMatrix4(new THREE.Matrix4().makeTranslation(xOffset, 0, 0));
+            geometries.push(geo);
+            xOffset += (glyph.ha * scale) + params.kerning;
+        });
+        if (geometries.length === 0) return null;
+        return THREE.BufferGeometryUtils.mergeBufferGeometries(geometries);
+    }
+
+    function generateQRShapes(text) {
+        if (!text || typeof qrcode === 'undefined') return null;
+        const qr = qrcode(0, 'M');
+        qr.addData(text);
+        qr.make();
+        const count = qr.getModuleCount();
+        const shapes = [];
+        for (let r = 0; r < count; r++) {
+            for (let c = 0; c < count; c++) {
+                if (qr.isDark(r, c)) {
+                    const s = new THREE.Shape();
+                    s.moveTo(c, -r); s.lineTo(c + 1, -r); s.lineTo(c + 1, -(r + 1)); s.lineTo(c, -(r + 1)); s.closePath();
+                    shapes.push(s);
+                }
+            }
+        }
+        return { shapes, count };
+    }
+
+    function mkPtsR(pts, s, cr) {
+      if (cr < 0.1) {
+        s.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) s.lineTo(pts[i][0], pts[i][1]);
+        s.closePath();
+        return s;
+      }
+      const n = pts.length;
+      for (let i = 0; i < n; i++) {
+        const p = pts[(i - 1 + n) % n],
+          c = pts[i],
+          nx = pts[(i + 1) % n],
+          d1 = Math.hypot(c[0] - p[0], c[1] - p[1]),
+          d2 = Math.hypot(nx[0] - c[0], nx[1] - c[1]);
+        const r = Math.min(cr, d1 * 0.45, d2 * 0.45);
+        const t1x = c[0] + (p[0] - c[0]) / d1 * r,
+          t1y = c[1] + (p[1] - c[1]) / d1 * r;
+        const t2x = c[0] + (nx[0] - c[0]) / d2 * r,
+          t2y = c[1] + (nx[1] - c[1]) / d2 * r;
+        if (i === 0) s.moveTo(t1x, t1y);
+        else s.lineTo(t1x, t1y);
+        s.quadraticCurveTo(c[0], c[1], t2x, t2y);
+      }
+      s.closePath();
+      return s;
+    }
+
+    function createShapeBase(sh, w, h) {
+      const hw = w / 2, hd = h / 2;
+      const s = new THREE.Shape();
+      const nw = NOTCH_WIDTH / 2;
+      const nd = NOTCH_DEPTH;
+      const cr = 4;
+
+      const drawNotch = () => {
+        s.lineTo(-nw, -hd);
+        s.lineTo(-nw, -hd - nd);
+        s.lineTo(nw, -hd - nd);
+        s.lineTo(nw, -hd);
+      };
+
+      if (['rect', 'round', 'pill', 'chamf'].includes(sh)) {
+        if (sh === 'chamf') {
+          const c = Math.min(hw, hd) * .3;
+          s.moveTo(nw, -hd);
+          s.lineTo(hw - c, -hd); s.lineTo(hw, -hd + c); s.lineTo(hw, hd - c); s.lineTo(hw - c, hd);
+          s.lineTo(-hw + c, hd); s.lineTo(-hw, hd - c); s.lineTo(-hw, -hd + c); s.lineTo(-hw + c, -hd);
+          drawNotch();
+          return s;
+        }
+        const r = sh === 'pill' ? Math.min(hw, hd) : sh === 'round' ? Math.min(hw, hd) * .4 : cr;
+        
+        if (r > .1) {
+          s.moveTo(nw, -hd);
+          s.lineTo(hw - r, -hd); s.quadraticCurveTo(hw, -hd, hw, -hd + r);
+          s.lineTo(hw, hd - r); s.quadraticCurveTo(hw, hd, hw - r, hd);
+          s.lineTo(-hw + r, hd); s.quadraticCurveTo(-hw, hd, -hw, hd - r);
+          s.lineTo(-hw, -hd + r); s.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
+          drawNotch();
+        } else {
+          s.moveTo(nw, -hd); s.lineTo(hw, -hd); s.lineTo(hw, hd); s.lineTo(-hw, hd); s.lineTo(-hw, -hd);
+          drawNotch();
+        }
+        return s;
+      }
+
+      let pts = [];
+      if (sh === 'hex') pts = [[-hw + hd * .5, hd], [hw - hd * .5, hd], [hw, 0], [hw - hd * .5, -hd], [nw, -hd], [nw, -hd - nd], [-nw, -hd - nd], [-nw, -hd], [-hw + hd * .5, -hd], [-hw, 0]];
+      else if (sh === 'shld') {
+        s.moveTo(nw, -hd); s.lineTo(hw, -hd); s.lineTo(hw, hd * 0.2); s.quadraticCurveTo(hw, hd, 0, hd); s.quadraticCurveTo(-hw, hd, -hw, hd * 0.2); s.lineTo(-hw, -hd); drawNotch();
+        return s;
+      }
+      else if (sh === 'badge') {
+        s.moveTo(nw, -hd); s.lineTo(hw, -0.4 * hd); s.lineTo(hw, 0.4 * hd); s.quadraticCurveTo(0, 1.6 * hd, -hw, 0.4 * hd); s.lineTo(-hw, -0.4 * hd); drawNotch();
+        return s;
+      }
+      else if (sh === 'banner') pts = [[-hw, hd], [hw, hd], [hw - hd * .4, 0], [hw, -hd], [nw, -hd], [nw, -hd - nd], [-nw, -hd - nd], [-nw, -hd], [-hw, -hd], [-hw + hd * .4, 0]];
+      else if (sh === 'cyber') pts = [[-hw, hd * .6], [-hw + hd * .4, hd], [hw, hd], [hw, -hd * .6], [hw - hd * .4, -hd], [nw, -hd], [nw, -hd - nd], [-nw, -hd - nd], [-nw, -hd], [-hw, -hd]];
+      else if (sh === 'gate') pts = [[-hw + hd * .2, hd], [hw - hd * .2, hd], [hw, hd * .8], [hw, -hd * .8], [hw - hd * .2, -hd], [nw, -hd], [nw, -hd - nd], [-nw, -hd - nd], [-nw, -hd], [-hw + hd * .2, -hd], [-hw, -hd * .8], [-hw, hd * .8]];
+      else if (sh === 'oval') {
+        const segments = 64;
+        const alpha = Math.asin(Math.min(0.95, nw / hw));
+        for (let i = 0; i <= segments; i++) {
+            const theta = -Math.PI/2 + alpha + (i / segments) * (Math.PI * 2 - 2 * alpha);
+            pts.push([Math.cos(theta) * hw, Math.sin(theta) * hd]);
+        }
+        pts.push([-nw, -hd], [-nw, -hd - nd], [nw, -hd - nd], [nw, -hd]);
+      }
+      else if (sh === 'oct') {
+        const o = Math.min(hw, hd) * .38; pts = [[-hw + o, hd], [hw - o, hd], [hw, hd - o], [hw, -hd + o], [hw - o, -hd], [nw, -hd], [nw, -hd - nd], [-nw, -hd - nd], [-nw, -hd], [-hw + o, -hd], [-hw, -hd + o], [-hw, hd - o]];
+      }
+      else if (sh === 'trap') {
+        const n = hw * .2; pts = [[-hw + n, hd], [hw - n, hd], [hw, -hd], [nw, -hd], [nw, -hd - nd], [-nw, -hd - nd], [-nw, -hd], [-hw, -hd]];
+      }
+      else if (sh === 'chevr') pts = [[-hw, hd], [hw - hd * .6, hd], [hw, 0], [hw - hd * .6, -hd], [nw, -hd], [nw, -hd - nd], [-nw, -hd - nd], [-nw, -hd], [-hw, -hd], [-hw + hd * .6, 0]];
+      else if (sh === 'gothic') {
+        const segments = 64;
+        const alpha = Math.asin(Math.min(0.95, nw / hw));
+        for (let i = 0; i <= segments; i++) {
+            const theta = -Math.PI/2 + alpha + (i / segments) * (Math.PI * 2 - 2 * alpha);
+            const sc = Math.abs(Math.cos(theta)) > .5 ? 1 : 1.15;
+            pts.push([Math.cos(theta) * hw, Math.sin(theta) * hd * sc]);
+        }
+        pts.push([-nw, -hd], [-nw, -hd - nd], [nw, -hd - nd], [nw, -hd]);
+      }
+      else if (sh === 'wedge') pts = [[-hw, hd], [hw, hd * .6], [hw, -hd * .6], [nw, -hd], [nw, -hd - nd], [-nw, -hd - nd], [-nw, -hd], [-hw, -hd]];
+
+      if (pts.length) return mkPtsR(pts, s, cr);
+      return s;
+    }
+
+    function updatePlaque() {
+        while(plaqueGroup.children.length > 0) plaqueGroup.remove(plaqueGroup.children[0]);
+
+        const t1GeoTmp = createTextGeometry(params.text1 || " ", params.textSize, params.contentRelief);
+        const t2GeoTmp = createTextGeometry(params.text2 || " ", params.textSize, params.contentRelief);
+
+        let t1W = 0, t2W = 0;
+        if (t1GeoTmp) { t1GeoTmp.computeBoundingBox(); t1W = t1GeoTmp.boundingBox.max.x - t1GeoTmp.boundingBox.min.x; }
+        if (t2GeoTmp) { t2GeoTmp.computeBoundingBox(); t2W = t2GeoTmp.boundingBox.max.x - t2GeoTmp.boundingBox.min.x; }
+
+        const baseLw = 40 * Math.max(0.1, 1-(10-params.textSize)*0.1);
+        const lw = baseLw * params.logoScale, lh = baseLw * params.logoScale;
+        const qw = baseLw * params.logoScale, qh = baseLw * params.logoScale;
+
+        const qrData = params.qrEnabled ? generateQRShapes(params.qrText) : null;
+        qrShapes = qrData ? qrData.shapes : null;
+
+        if (svgShapes || qrShapes) document.getElementById('logo-controls').classList.remove('hidden-node');
+        else document.getElementById('logo-controls').classList.add('hidden-node');
+
+        let naturalW, naturalH;
+        let contentW = Math.max(t1W, t2W);
+        let contentH = (params.textSize * 2) + params.lineSpacing;
+
+        const assetW = (svgShapes && qrShapes) ? (lw + qw + 8) : (svgShapes ? lw : qrShapes ? qw : 0);
+        const assetH = Math.max(svgShapes ? lh : 0, qrShapes ? qh : 0);
+
+        if (svgShapes || qrShapes) {
+            if (['top', 'bottom', 'middle'].includes(params.logoPos)) {
+                naturalW = Math.max(contentW, assetW) + params.padding * 2;
+                naturalH = contentH + assetH + (params.lineSpacing * 2) + params.padding * 2;
+            } else {
+                const gutter = 8; 
+                naturalW = contentW + assetW + gutter + params.padding * 2;
+                naturalH = Math.max(contentH, assetH) + params.padding * 2;
+            }
+        } else {
+            naturalW = contentW + params.padding * 2;
+            naturalH = contentH + params.padding * 2;
+        }
+
+        if (params.shape === 'banner') naturalW += 30;
+        if (params.shape === 'oval') naturalW += 5;   
+
+        const masterScale = params.targetWidth / naturalW;
+        const finalW = params.targetWidth;
+        const finalH = naturalH * masterScale;
+
+        currentTotalW = finalW;
+        currentTotalH = finalH;
+
+        const st1Geo = createTextGeometry(params.text1 || " ", params.textSize * masterScale, params.contentRelief);
+        const st2Geo = createTextGeometry(params.text2 || " ", params.textSize * masterScale, params.contentRelief);
+
+        let st1W = 0, st2W = 0;
+        if (st1Geo) { st1Geo.computeBoundingBox(); st1W = st1Geo.boundingBox.max.x - st1Geo.boundingBox.min.x; }
+        if (st2Geo) { st2Geo.computeBoundingBox(); st2W = st2Geo.boundingBox.max.x - st2Geo.boundingBox.min.x; }
+
+        const scaledLw = lw * masterScale, scaledLh = lh * masterScale;
+        const scaledQw = qw * masterScale, scaledQh = qh * masterScale;
+        const scaledPadding = params.padding * masterScale;
+        const scaledLineSpacing = params.lineSpacing * masterScale;
+        const scaledTextSize = params.textSize * masterScale;
+
+        const layer1Shape = createShapeBase(params.shape, finalW, finalH);
+        const backLogoData = new THREE.SVGLoader().parse(`<svg><path d="${BACK_SVG_PATH}"/></svg>`);
+        const backShapesRaw = [];
+        backLogoData.paths.forEach(p => backShapesRaw.push(...THREE.SVGLoader.createShapes(p)));
+
+        let bMinX = Infinity, bMaxX = -Infinity, bMinY = Infinity, bMaxY = -Infinity;
+        backShapesRaw.forEach(s => {
+            const pts = s.getPoints();
+            pts.forEach(p => {
+                if(p.x < bMinX) bMinX = p.x; if(p.x > bMaxX) bMaxX = p.x;
+                if(p.y < bMinY) bMinY = p.y; if(p.y > bMaxY) bMaxY = p.y;
+            });
+        });
+        const bMidX = (bMinX + bMaxX) / 2, bMidY = (bMinY + bMaxY) / 2;
+        const bScale = (80 * (finalW / 200)) / 306; 
+
+        backShapesRaw.forEach(ps => {
+            const convert = (p) => new THREE.Vector2(-((p.x - bMidX) * bScale), -((p.y - bMidY) * bScale));
+            const outer = new THREE.Path(ps.getPoints().map(convert));
+            layer1Shape.holes.push(outer);
+            if (ps.holes) {
+                ps.holes.forEach(hp => {
+                    const hShape = new THREE.Shape(hp.getPoints().map(convert));
+                    const hGeo = new THREE.ExtrudeGeometry(hShape, { depth: 1, bevelEnabled: true, bevelThickness: 0.4, bevelSize: 0.4 });
+                    const m = new THREE.Mesh(hGeo, new THREE.MeshStandardMaterial({ color: PLAQUE_COLOR, roughness: 0.7 }));
+                    m.name = "PlaqueBody";
+                    plaqueGroup.add(m);
+                });
+            }
+        });
+
+        const g1 = new THREE.ExtrudeGeometry(layer1Shape, { depth: 1, bevelEnabled: true, bevelThickness: 0.4, bevelSize: 0.4, bevelSegments: 3, curveSegments: 64 });
+        const m1 = new THREE.Mesh(g1, new THREE.MeshStandardMaterial({ color: PLAQUE_COLOR, roughness: 0.7 }));
+        m1.name = "PlaqueBody";
+        plaqueGroup.add(m1);
+
+        const layer2Shape = createShapeBase(params.shape, finalW, finalH);
+        const g2 = new THREE.ExtrudeGeometry(layer2Shape, { depth: params.thickness - 1, bevelEnabled: true, bevelThickness: 0.4, bevelSize: 0.4, bevelSegments: 3, curveSegments: 64 });
+        const m2 = new THREE.Mesh(g2, new THREE.MeshStandardMaterial({ color: PLAQUE_COLOR, roughness: 0.7 }));
+        m2.position.z = 1; 
+        m2.name = "PlaqueBody";
+        plaqueGroup.add(m2);
+
+        const frontContent = new THREE.Group();
+        frontContent.name = "PlaqueContent";
+        frontContent.position.z = params.thickness - 0.05;
+        plaqueGroup.add(frontContent);
+        const tMat = new THREE.MeshStandardMaterial({ color: TEXT_COLOR, metalness: 0.4, roughness: 0.3 });
+
+        let mt1, mt2;
+        if (st1Geo) { mt1 = new THREE.Mesh(st1Geo, tMat); mt1.name = "PlaqueContent"; }
+        if (st2Geo) { mt2 = new THREE.Mesh(st2Geo, tMat); mt2.name = "PlaqueContent"; }
+
+        let y1, y2, lx = 0, ly = 0, qx = 0, qy = 0;
+        const assetGutter = 8 * masterScale;
+
+        if (!svgShapes && !qrShapes) { y1 = scaledLineSpacing / 2; y2 = -scaledLineSpacing / 2 - scaledTextSize; }
+        else {
+            if (['top', 'bottom', 'middle'].includes(params.logoPos)) {
+                if (params.logoPos === 'top') { 
+                    ly = qy = finalH/2 - scaledPadding - assetH/2; 
+                    y1 = ly - assetH/2 - scaledLineSpacing * 1.5; y2 = y1 - scaledTextSize - scaledLineSpacing; 
+                }
+                else if (params.logoPos === 'bottom') { 
+                    y1 = finalH/2 - scaledPadding - scaledTextSize; y2 = y1 - scaledTextSize - scaledLineSpacing; 
+                    ly = qy = y2 - scaledLineSpacing - assetH/2; 
+                }
+                else if (params.logoPos === 'middle') { 
+                    y1 = assetH/2 + scaledLineSpacing; ly = qy = 0; y2 = -assetH/2 - scaledLineSpacing - scaledTextSize; 
+                }
+                if (svgShapes && qrShapes) {
+                    lx = - (scaledLw + scaledQw + assetGutter) / 2 + scaledLw / 2;
+                    qx = (scaledLw + scaledQw + assetGutter) / 2 - scaledQw / 2;
+                } else {
+                    lx = qx = 0;
+                }
+            } else { // Left or Right
+                const sideShift = (params.shape === 'banner') ? (15 * masterScale) : 0;
+                y1 = scaledLineSpacing / 2; y2 = -scaledLineSpacing / 2 - scaledTextSize; 
+                if (svgShapes && qrShapes) {
+                    lx = -finalW/2 + scaledPadding + scaledLw/2 + sideShift;
+                    qx = finalW/2 - scaledPadding - scaledQw/2 - sideShift;
+                } else if (svgShapes) {
+                    lx = (params.logoPos === 'left' ? -1 : 1) * (finalW/2 - scaledPadding - scaledLw/2 - sideShift);
+                } else if (qrShapes) {
+                    qx = (params.logoPos === 'left' ? -1 : 1) * (finalW/2 - scaledPadding - scaledQw/2 - sideShift);
+                }
+            }
+        }
+
+        let centerOffset = 0;
+        if (['left', 'right'].includes(params.logoPos)) {
+            if (svgShapes && qrShapes) {
+                centerOffset = 0; // Assets flank text, text stays center
+            } else if (svgShapes || qrShapes) {
+                const currentAssetW = svgShapes ? scaledLw : scaledQw;
+                const direction = params.logoPos === 'left' ? 1 : -1;
+                centerOffset = direction * (currentAssetW / 2 + 4 * masterScale);
+            }
+        }
+
+        if (mt1) mt1.position.set(-st1W/2 + centerOffset, y1, 0); 
+        if (mt2) mt2.position.set(-st2W/2 + centerOffset, y2, 0);
+        if (mt1) frontContent.add(mt1);
+        if (mt2) frontContent.add(mt2);
+
+        if (svgShapes) {
+            const logoFront = new THREE.Group();
+            logoFront.name = "PlaqueContent";
+            svgShapes.forEach(ps => {
+                const shp = new THREE.Shape(ps.getPoints());
+                if (ps.holes) ps.holes.forEach(h => shp.holes.push(new THREE.Path(h.getPoints())));
+                const lm = new THREE.Mesh(new THREE.ExtrudeGeometry(shp, { depth: params.contentRelief, bevelEnabled: false, curveSegments: 32 }), tMat);
+                lm.name = "PlaqueContent";
+                logoFront.add(lm);
+            });
+            const b = new THREE.Box3().setFromObject(logoFront);
+            const center = new THREE.Vector3(); b.getCenter(center);
+            const sz = new THREE.Vector3(); b.getSize(sz);
+            logoFront.children.forEach(c => { c.position.x -= center.x; c.position.y -= center.y; });
+            const sc = Math.min(scaledLw / sz.x, scaledLh / sz.y);
+            logoFront.scale.set(sc, -sc, 1); logoFront.position.set(lx, ly, 0); 
+            frontContent.add(logoFront);
+        }
+
+        if (qrShapes && qrData) {
+            const qrGeo = new THREE.ExtrudeGeometry(qrShapes, { depth: params.contentRelief, bevelEnabled: false });
+            const qrMesh = new THREE.Mesh(qrGeo, tMat);
+            qrMesh.name = "PlaqueContent";
+            const qSc = scaledQw / qrData.count;
+            qrMesh.scale.set(qSc, qSc, 1);
+            qrMesh.position.set(qx - scaledQw / 2, qy + scaledQh / 2, 0);
+            frontContent.add(qrMesh);
+        }
+    }
+
+    function handleSVG(f) {
+        if (!f) return; document.getElementById('file-name').innerText = f.name;
+        const r = new FileReader(); r.onload = (e) => {
+            params.svgData = e.target.result; 
+            const data = new THREE.SVGLoader().parse(e.target.result);
+            svgShapes = []; data.paths.forEach(p => svgShapes.push(...THREE.SVGLoader.createShapes(p)));
+            updatePlaque();
+        }; r.readAsText(f);
+    }
+
+    function saveConfig() {
+        const data = JSON.stringify(params, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `${getBaseFilename()}.json`; a.click();
+    }
+
+    function loadConfig(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (re) => {
+            try {
+                const loaded = JSON.parse(re.target.result);
+                Object.assign(params, loaded);
+                ['text1', 'text2', 'shape-select', 'logo-pos', 'logo-scale', 'qr-text', 'thickness', 'text-size', 'line-spacing', 'padding', 'content-relief', 'target-width', 'kerning'].forEach(id => {
+                    const el = document.getElementById(id);
+                    const k = id.includes('-') ? id.replace(/-([a-z])/g, (g) => g[1].toUpperCase()) : id;
+                    const paramKey = id === 'shape-select' ? 'shape' : k;
+                    if (el) el.value = params[paramKey];
+                    if (document.getElementById(`${id}-val`)) {
+                        document.getElementById(`${id}-val`).innerText = params[paramKey] + (id === 'logo-scale' ? "x" : (id === 'kerning' ? "" : "mm"));
+                    }
+                });
+                const qrT = document.getElementById('qr-toggle');
+                if (params.qrEnabled) { qrT.classList.add('active'); document.getElementById('qr-controls').classList.remove('hidden-node'); }
+                else { qrT.classList.remove('active'); document.getElementById('qr-controls').classList.add('hidden-node'); }
+
+                if (params.fontUrl) document.getElementById('font-select').value = params.fontUrl;
+                if (params.svgData) {
+                    const data = new THREE.SVGLoader().parse(params.svgData);
+                    svgShapes = []; data.paths.forEach(p => svgShapes.push(...THREE.SVGLoader.createShapes(p)));
+                    document.getElementById('file-name').innerText = "Loaded SVG";
+                } else {
+                    svgShapes = null; document.getElementById('file-name').innerText = "Drop SVG";
+                }
+                await loadFont(params.fontUrl);
+                updatePlaque();
+            } catch (err) { console.error("Invalid Config File", err); }
+        };
+        reader.readAsText(file);
+    }
+
+    const drop = document.getElementById('drop-zone');
+    drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('dragover'); };
+    drop.ondragleave = () => drop.classList.remove('dragover');
+    drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('dragover'); handleSVG(e.dataTransfer.files[0]); };
+    drop.onclick = () => document.getElementById('svg-upload').click();
+    document.getElementById('svg-upload').onchange = (e) => handleSVG(e.target.files[0]);
+
+    ['text1', 'text2', 'shape-select', 'logo-pos', 'logo-scale', 'qr-text', 'thickness', 'text-size', 'line-spacing', 'padding', 'content-relief', 'target-width', 'kerning'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.oninput = (e) => {
+                let k = id.includes('-') ? id.replace(/-([a-z])/g, (g) => g[1].toUpperCase()) : id;
+                if (id === 'shape-select') k = 'shape';
+                params[k] = isNaN(e.target.value) ? e.target.value : parseFloat(e.target.value);
+                if (document.getElementById(`${id}-val`)) document.getElementById(`${id}-val`).innerText = params[k] + (id === 'logo-scale' ? "x" : (id === 'kerning' ? "" : "mm"));
+                updatePlaque();
+            };
+        }
+    });
+
+    document.getElementById('qr-toggle').onclick = (e) => {
+        params.qrEnabled = !params.qrEnabled;
+        e.target.classList.toggle('active');
+        document.getElementById('qr-controls').classList.toggle('hidden-node', !params.qrEnabled);
+        updatePlaque();
+    };
+
+    document.getElementById('font-select').onchange = async (e) => { params.fontUrl = e.target.value; await loadFont(e.target.value); updatePlaque(); };
+    document.getElementById('save-config-btn').onclick = saveConfig;
+    document.getElementById('load-config-btn').onclick = () => document.getElementById('config-upload').click();
+    document.getElementById('config-upload').onchange = loadConfig;
+
+    const modal = document.getElementById('info-modal');
+    document.getElementById('open-info').onclick = () => modal.classList.add('active');
+    document.getElementById('close-modal').onclick = () => modal.classList.remove('active');
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.classList.remove('active'); });
+
+    function getStandMesh() {
+        const standShape = new THREE.Shape();
+        const sw = NOTCH_WIDTH + 40;
+        const sd = params.thickness + 20;
+        standShape.moveTo(-sw/2, -sd/2); standShape.lineTo(sw/2, -sd/2); standShape.lineTo(sw/2, sd/2); standShape.lineTo(-sw/2, sd/2); standShape.closePath();
+        const hole = new THREE.Path();
+        const hw = NOTCH_WIDTH + 3.0; const hd = params.thickness + 4.0;
+        hole.moveTo(-hw/2, -hd/2); hole.lineTo(hw/2, -hd/2); hole.lineTo(hw/2, hd/2); hole.lineTo(-hw/2, hd/2); hole.closePath();
+        standShape.holes.push(hole);
+        const standH = params.thickness;
+        const geo = new THREE.ExtrudeGeometry(standShape, { depth: standH, bevelEnabled: true, bevelThickness: 1, bevelSize: 1 });
+        const mesh = new THREE.Mesh(geo);
+        mesh.position.set(0, -currentTotalH / 2 - 50, 0);
+        mesh.updateMatrixWorld();
+        mesh.name = "SignStand";
+        return mesh;
+    }
+
+    function getBaseFilename() {
+        const dateStr = new Date().toISOString().split('T')[0];
+        const text = `${params.text1}_${params.text2}`.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        const prefix = text ? text.substring(0, 40) : "MakerPlaque";
+        return `${prefix}_${dateStr}`;
+    }
+
+async function exportSTL() {
+        const buildSTL = (meshes, name) => {
+            let data = `solid ${name}\n`;
+            meshes.forEach(m => {
+                let g = m.geometry;
+                if (g.index) g = g.toNonIndexed();
+                g = g.clone();
+                g.applyMatrix4(m.matrixWorld);
+                const p = g.attributes.position;
+                for(let i = 0; i < p.count; i += 3) {
+                    const v1 = new THREE.Vector3(p.getX(i), p.getY(i), p.getZ(i));
+                    const v2 = new THREE.Vector3(p.getX(i+1), p.getY(i+1), p.getZ(i+1));
+                    const v3 = new THREE.Vector3(p.getX(i+2), p.getY(i+2), p.getZ(i+2));
+                    const n = new THREE.Vector3().crossVectors(v2.clone().sub(v1), v3.clone().sub(v1)).normalize();
+                    if (isNaN(n.x)) n.set(0, 0, 1);
+                    data += `facet normal ${n.x} ${n.y} ${n.z}\n outer loop\n vertex ${v1.x} ${v1.y} ${v1.z}\n vertex ${v2.x} ${v2.y} ${v2.z}\n vertex ${v3.x} ${v3.y} ${v3.z}\n endloop\nendfacet\n`;
+                }
+            });
+            data += `endsolid ${name}\n`;
+            return data;
+        };
+        plaqueGroup.updateMatrixWorld();
+        const signMeshes = [];
+        plaqueGroup.traverse(c => { if(c.isMesh) signMeshes.push(c); });
+        const baseName = getBaseFilename();
+        const signSTL = buildSTL(signMeshes, `${baseName}_Sign`);
+        const standSTL = buildSTL([getStandMesh()], `${baseName}_Stand`);
+
+        if (typeof JSZip !== 'undefined') {
+            const zip = new JSZip();
+            zip.file(`${baseName}_Sign.stl`, signSTL);
+            zip.file(`${baseName}_Stand.stl`, standSTL);
+            const blob = await zip.generateAsync({ type: "blob" });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${baseName}.zip`; a.click();
+        } else {
+            const dl = (content, filename) => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
+                a.download = filename;
+                a.click();
+            };
+            dl(signSTL, `${baseName}_Sign.stl`);
+            setTimeout(() => dl(standSTL, `${baseName}_Stand.stl`), 300);
+        }
+    }
+
+    async function export3MF() {
+        if (typeof JSZip === 'undefined') return;
+        const zip = new JSZip();
+
+        const extractGeo = (mesh) => {
+            let geo = mesh.geometry.clone();
+            if (geo.index) geo = geo.toNonIndexed();
+            mesh.updateMatrixWorld(true);
+            geo.applyMatrix4(mesh.matrixWorld);
+            const pos = geo.attributes.position;
+            const vMap = new Map();
+            const verts = [];
+            const tris = [];
+            for (let i = 0; i < pos.count; i += 3) {
+                const idx = [];
+                for (let j = 0; j < 3; j++) {
+                    const vx = pos.getX(i+j), vy = pos.getY(i+j), vz = pos.getZ(i+j);
+                    const key = vx.toFixed(4) + ',' + vy.toFixed(4) + ',' + vz.toFixed(4);
+                    if (!vMap.has(key)) {
+                        vMap.set(key, verts.length);
+                        verts.push({x: vx, y: vy, z: vz});
+                    }
+                    idx.push(vMap.get(key));
+                }
+                tris.push(idx);
+            }
+            return {verts, tris};
+        };
+        const buildMeshXml = (verts, tris) => {
+            let v = '';
+            for (let i = 0; i < verts.length; i++)
+                v += '<vertex x="' + verts[i].x.toFixed(4) + '" y="' + verts[i].y.toFixed(4) + '" z="' + verts[i].z.toFixed(4) + '" />\n';
+            let t = '';
+            for (let i = 0; i < tris.length; i++)
+                t += '<triangle v1="' + tris[i][0] + '" v2="' + tris[i][1] + '" v3="' + tris[i][2] + '" />\n';
+            return '<mesh>\n<vertices>\n' + v + '</vertices>\n<triangles>\n' + t + '</triangles>\n</mesh>\n';
+        };
+        const mergeGeos = (meshes) => {
+            const allV = [], allT = [];
+            meshes.forEach(m => {
+                const g = extractGeo(m);
+                const offset = allV.length;
+                g.verts.forEach(v => allV.push(v));
+                g.tris.forEach(tri => allT.push([tri[0]+offset, tri[1]+offset, tri[2]+offset]));
+            });
+            return {verts: allV, tris: allT};
+        };
+
+        const bodyMeshes = [], contentMeshes = [];
+        plaqueGroup.updateMatrixWorld(true);
+        plaqueGroup.traverse(c => {
+            if (!c.isMesh) return;
+            if (c.name === 'PlaqueBody') bodyMeshes.push(c);
+            else if (c.name === 'PlaqueContent') contentMeshes.push(c);
+        });
+
+        const bodyGeo = bodyMeshes.length ? mergeGeos(bodyMeshes) : null;
+        const contentGeo = contentMeshes.length ? mergeGeos(contentMeshes) : null;
+        const standMesh = getStandMesh();
+        const standGeo = standMesh ? extractGeo(standMesh) : null;
+
+        if (!bodyGeo && !contentGeo) return;
+
+        const safeName = getBaseFilename();
+        let objectsXml = '', buildXml = '', nextId = 1;
+
+        if (bodyGeo) {
+            const id = nextId++;
+            objectsXml += '<object id="' + id + '" type="model" name="Plaque_Base">\n' + buildMeshXml(bodyGeo.verts, bodyGeo.tris) + '</object>\n';
+            buildXml += '<item objectid="' + id + '" />\n';
+        }
+        if (contentGeo) {
+            const id = nextId++;
+            objectsXml += '<object id="' + id + '" type="model" name="Plaque_Content">\n' + buildMeshXml(contentGeo.verts, contentGeo.tris) + '</object>\n';
+            buildXml += '<item objectid="' + id + '" />\n';
+        }
+        if (standGeo && standGeo.verts.length) {
+            const id = nextId++;
+            objectsXml += '<object id="' + id + '" type="model" name="Plaque_Stand">\n' + buildMeshXml(standGeo.verts, standGeo.tris) + '</object>\n';
+            buildXml += '<item objectid="' + id + '" />\n';
+        }
+
+        const modelXml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+            '<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">\n' +
+            '<resources>\n' + objectsXml + '</resources>\n' +
+            '<build>\n' + buildXml + '</build>\n</model>';
+
+        zip.file('3D/3dmodel.model', modelXml);
+        zip.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel" /></Relationships>');
+        zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" /><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml" /></Types>');
+
+        const blob = await zip.generateAsync({type: 'blob'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = safeName + '.3mf'; a.click();
+    }
+
+    document.getElementById('export-btn').onclick = exportSTL;
+    document.getElementById('export-3mf-btn').onclick = export3MF;
+    
+    document.getElementById('mobile-menu-toggle').onclick = () => {
+        const menu = document.getElementById('main-menu');
+        menu.classList.toggle('-translate-y-full');
+        menu.classList.toggle('translate-y-0');
+    };
+
+    function animate() { requestAnimationFrame(animate); if(controls) controls.update(); if(renderer && scene && camera) renderer.render(scene, camera); }
+    window.onresize = () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); };
+    window.onload = init;
+</script>
+</body>
+</html>
